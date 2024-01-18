@@ -6,4 +6,4 @@ void init_Debug_Callback();
 int init_GLFW(int width, int height, char* name);
 
 void load_image_texture(int slot);
-void init_texture();
+void init_Texture();

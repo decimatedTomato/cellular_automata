@@ -230,7 +230,7 @@ void init_Uniforms() {
     glUniform2f(location_resolution, window_width, window_height);
 
     location_texture = glGetUniformLocation(current_shader, "u_texture");
-    // assert(location_texture != -1);
+    assert(location_texture != -1);
     glUniform1i(location_texture, 0);
 }
 
