@@ -1,43 +1,68 @@
 #include "define.h"
 #include "automata.h"
 
-extern ruleset_t current_ruleset;
-
 /* Repeated functions */
+void print_square_grid(state_t *state) {
+    for (int j = GRID_HEIGHT-1; j >= 0; j--) {
+        for (int i = 0; i < GRID_WIDTH; i++) {
+            printf("%i ", state->cells[j * GRID_WIDTH + i]);
+        }
+        putchar('\n');
+    }
+    putchar('\n');
+}
 
-void render_square_grid(state_t *state) {
+void render_square_grid(state_t *state, color_t *texture) {
     color_t(*color_of)(state_t *state, position_t pos) = state->rules->get_color;
     for (position_t c = 0; c < CELL_COUNT; c++) {
-        state->texture[c] = color_of(state, state->cells[c]);
+        texture[c] = color_of(state, c);
     }
 }
 
 color_t color_palette_pick(state_t *state, position_t pos) {
-    return current_ruleset.palette[state->cells[pos] % current_ruleset.palette_count];
+    return state->rules->palette[state->cells[pos] % state->rules->palette_count];
 }
 
 /* Game of life
 In this automata a cell can have 2 states, ALIVE or DEAD
 Each cell obeys 3 rules
-- If a living cell is surrounded by less than 3 other living cells it dies, as via underpopulation
-- If a living cell is surrounded by more than 4 other living cells it does, as via overpopulation
+- If a living cell is surrounded by less than 2 other living cells it dies, as via underpopulation
+- If a living cell is surrounded by more than 3 other living cells it does, as via overpopulation
 - If a dead cell is surrounded by precisely 3 living cells it comes to life, as via reproduction 
 */
 
-struct GoL_data {
-    u32 grid_width;
-};
-
-u32 get_width() {
-    return (*(struct GoL_data*)current_ruleset.automata_specific_data).grid_width;
-}
-
-cell_value_t GoL_get_value(state_t *state, position_t pos) {
-    u32 width = get_width();
-    cell_value_t (*grid)[CELL_COUNT/width] = (cell_value_t (*)[CELL_COUNT/width])state->cells;
-    return grid[pos % width][pos / width];
-}
 cell_value_t GoL_get_next_value(state_t *state, position_t pos) {
-    // TODO regular GoL calculation
-    return GoL_DEAD;
+    int is_alive = state->cells[pos];
+    int neighbors = -is_alive;
+    for (int j = -1; j <= 1; j++) {
+        for (int i = -1; i <= 1; i++) {
+            u32 x = (pos % GRID_WIDTH + i + GRID_WIDTH) % GRID_WIDTH;
+            u32 y = (pos / GRID_WIDTH + j + GRID_HEIGHT) % GRID_HEIGHT;
+            neighbors += state->cells[y * GRID_WIDTH + x];
+        }
+    }
+
+    if (is_alive && (neighbors < 2 || neighbors > 3)) return GoL_DEAD;
+    if (!is_alive && neighbors == 3) return GoL_ALIVE;
+    return is_alive;
+}
+
+cell_value_t GoL_get_random_value(state_t *state, position_t pos, int rand_int) {
+    (void) state, (void) pos;
+    return rand_int % GoL_STATES_COUNT;
+}
+
+/* Brian's Brain
+In this automata a cell can have 3 states, ALIVE, DYING or DEAD
+
+*/
+
+cell_value_t BB_get_next_value(state_t *state, position_t pos) {
+    cell_value_t current = state->cells[pos];
+    return current;
+}
+
+cell_value_t BB_get_random_value(state_t *state, position_t pos, int rand_int) {
+    (void) state, (void) pos;
+    return rand_int % BB_STATES_COUNT;
 }

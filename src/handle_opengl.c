@@ -4,19 +4,16 @@
 #include <string.h>
 #include <assert.h>
 
+#include "simulation.h"
+#include "handle_opengl.h"
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-// Window size definition (should not be in this file)
-#define MONITOR_WIDTH 1920
-#define MONITOR_HEIGHT 1080
-
-#include "simulation.h"
-
-// State (should not be in this file)
-bool fullscreen = false;
-bool just_fullscreened = false, just_loaded = false, just_paused = false, just_stepped = false, just_saved = false;
+// State
+bool fullscreen = true;
+bool just_fullscreened = false, just_loaded = false, just_paused = false, just_stepped = false, just_saved = false, just_restarted = false;
 int prev_width, prev_height, prev_x, prev_y;
 
 // Shaders
@@ -27,7 +24,6 @@ int location_time;
 int location_resolution;
 
 int location_texture; // The values of the grid particles
-int location_color_count; // The number of colors in the color palette
 int location_colors; // The color palette
 
 // Windows
@@ -81,24 +77,38 @@ void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum 
     printf("\n");
 }
 
+
+void init_Texture(const void *pixels, int grid_width, int grid_height) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glActiveTexture(GL_TEXTURE0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grid_width, grid_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+}
+
+void update_Texture(const void *pixels, int grid_width, int grid_height) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, grid_width, grid_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+}
+
 static char* readFile(const char* filepath) {
-	char* buffer = '\0';
-	long length;
-	FILE* f = fopen(filepath, "r");
+    char* buffer = NULL;
+    long length = 0;
+    FILE* f = fopen(filepath, "r");
 
-	if (f != NULL) {
-		fseek(f, 0, SEEK_END); // Will fail with files of size > 4GB
-		length = ftell(f);
-		fseek(f, 0, SEEK_SET);
-		buffer = malloc(length + 1);
-		if (buffer) {
-			fread(buffer, 1, length, f);
-		}
-		fclose(f);
-		buffer[length] = '\0';
-	}
+    if (f != NULL) {
+        fseek(f, 0, SEEK_END); // Will fail with files of size > 4GB
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        buffer = malloc(length + 1);
+        if (buffer) {
+            fread(buffer, 1, length, f);
+        }
+        fclose(f);
+        buffer[length] = '\0';
+    }
 
-	return buffer;
+    return buffer;
 }
 
 static unsigned int CompileShader(unsigned int type, const char* src) {
@@ -166,8 +176,16 @@ int init_GLFW(int width, int height, char* name) {
         printf("glewInit failed, something is seriously wrong.\n");
     }
 
+    if (fullscreen) {
+        prev_width = window_width;
+        prev_height = window_height;
+        glfwGetWindowPos(window, &prev_x, &prev_y);
+        glfwSetWindowMonitor(window, monitor, 0, 0, MONITOR_WIDTH, MONITOR_HEIGHT, GLFW_DONT_CARE);
+    }
+
     return 0;
 }
+
 void init_Debug_Callback() {
     /* Sets the debug messages to run a certain callback function */
     glEnable(GL_DEBUG_OUTPUT);
@@ -224,7 +242,7 @@ void init_Uniforms() {
     glUniform1f(location_time, glfwGetTime());    
 
     location_resolution = glGetUniformLocation(current_shader, "u_resolution");
-    assert(location_resolution != -1);
+    // assert(location_resolution != -1);
     glfwGetWindowSize(window, &window_width, &window_height);
     glViewport(0, 0, window_width, window_height);
     glUniform2f(location_resolution, window_width, window_height);
@@ -274,6 +292,12 @@ void take_user_input() {
             just_loaded = true;
         }
     } else just_loaded = false;
+    if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        if(!just_restarted) {
+            restart();
+            just_restarted = true;
+        }
+    } else just_restarted = false;
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, 1);
     }
