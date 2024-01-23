@@ -8,8 +8,15 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define DELAY
-#define FRAME_DELAY 100
+// #define _DEBUG
+#ifdef _DEBUG
+    #define DEBUG(X) X 
+#else
+    #define DEBUG(X)
+#endif // _DEBUG
+
+// #define DELAY
+#define FRAME_DELAY 10
 
 #ifdef DELAY
     #ifdef _WIN32
@@ -25,10 +32,10 @@
 
 typedef uint32_t u32;
 
-#define GRID_WIDTH 6
-#define GRID_HEIGHT 3
-// #define GRID_WIDTH 192
-// #define GRID_HEIGHT 108
+// #define GRID_WIDTH 64
+// #define GRID_HEIGHT 36
+#define GRID_WIDTH 1920
+#define GRID_HEIGHT 1080
 #define CELL_COUNT GRID_WIDTH*GRID_HEIGHT
 
 #define ARRAY_LEN(X) (sizeof(X)/sizeof(X[0]))

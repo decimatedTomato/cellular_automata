@@ -58,8 +58,6 @@ void init_grid(state_t *state) {
     for (cell_value_t c = 0; c < CELL_COUNT; c++) {
         state->cells[c] = state->rules->get_random_value(state, c, rand());
     }
-    print_square_grid(state);
-    printf("%i", BB_palette_count);
 }
 
 /* Update everything in simulation */
@@ -126,6 +124,7 @@ int main() {
         take_user_input();
         keep_running = render(&state);
         if (mode != PAUSED) update(&state);
+        DEBUG(print_square_grid(&state));
         WAIT(FRAME_DELAY);
     }
     clean_up();
