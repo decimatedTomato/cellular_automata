@@ -61,8 +61,7 @@ Each generation:
 */
 
 cell_value_t BB_get_next_value(state_t *state, position_t pos) {
-    cell_value_t current = state->cells[pos];
-    switch (current)
+    switch (state->cells[pos])
     {
     case BB_ALIVE:
         return BB_DYING;
@@ -77,10 +76,7 @@ cell_value_t BB_get_next_value(state_t *state, position_t pos) {
                 neighbors += state->cells[y * GRID_WIDTH + x] == BB_ALIVE;
             }
         }
-        if (neighbors == 2) {
-            return BB_ALIVE;
-        }
-        return BB_DEAD;
+        return (neighbors == 2) ? BB_ALIVE : BB_DEAD;
     default:
         assert(0 && "UNREACHABLE");
         break;
@@ -91,4 +87,41 @@ cell_value_t BB_get_next_value(state_t *state, position_t pos) {
 cell_value_t BB_get_random_value(state_t *state, position_t pos, int rand_int) {
     (void) state, (void) pos;
     return rand_int % BB_STATES_COUNT;
+}
+
+/* Wireworld
+In this automata a cell can have 3 states, ALIVE, DYING or DEAD
+Each generation:
+- If a cell is empty it stays empty
+- If a cell contains an electron head it becomes an electron tail,
+- If a cell contains an electron tail it becomes a conductor,
+- If a cell contains a conductor and one or two of the neighbouring cells are electron heads it becomes an electorn head, otherwise remains conductor
+*/
+
+cell_value_t WW_get_next_value(state_t *state, position_t pos) {
+    switch (state->cells[pos]) {
+        case WW_EMPTY:
+            return WW_EMPTY;
+        case WW_ELECTRON_HEAD:
+            return WW_ELECTRON_TAIL;
+        case WW_ELECTRON_TAIL:
+            return WW_CONDUCTOR;
+        case WW_CONDUCTOR:
+            int neighbor_electron = 0;
+            for (int j = -1; j <= 1; j++) {
+                for (int i = -1; i <= 1; i++) {
+                    u32 x = (pos % GRID_WIDTH + i + GRID_WIDTH) % GRID_WIDTH;
+                    u32 y = (pos / GRID_WIDTH + j + GRID_HEIGHT) % GRID_HEIGHT;
+                    neighbor_electron += state->cells[y * GRID_WIDTH + x] == WW_ELECTRON_HEAD;
+                }
+            }
+            return (neighbor_electron == 2 || neighbor_electron == 1) ? WW_ELECTRON_HEAD : WW_CONDUCTOR;
+        default:
+            assert(0 && "UNREACHABLE");
+    }
+    return WW_EMPTY;
+}
+cell_value_t WW_get_random_value(state_t *state, position_t pos, int rand_int) {
+    (void) state, (void) pos;
+    return rand_int % WW_palette_count;
 }

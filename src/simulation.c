@@ -1,13 +1,12 @@
 #include <time.h>
 
+#include "define.h"
 #include "automata.h"
 #include "handle_opengl.h"
 
-// Portability issues
+// USER DEFINITIONS
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
-
-// USER DEFINITIONS
 #define DEFAULT_WINDOW_WIDTH SCREEN_WIDTH/3
 #define DEFAULT_WINDOW_HEIGHT SCREEN_HEIGHT/3
 
@@ -31,8 +30,16 @@ ruleset_t rulesets[] = {
         BB_palette_count,
         render_square_grid,
     },
+    (ruleset_t) {
+        &color_palette_pick,
+        &WW_get_next_value,
+        &WW_get_random_value,
+        WW_palette,
+        WW_palette_count,
+        render_square_grid,
+    },
 };
-// assert(("The number of defined rulesets is incorrect", ARRAY_LEN(rulesets) == RULESET_COUNT));
+// assert((ARRAY_LEN(rulesets) == RULESET_COUNT));
 
 state_t state = {0};
 color_t texture[CELL_COUNT] = {0};
@@ -49,8 +56,8 @@ typedef enum DisplayMode {
 DisplayMode mode = PAUSED;
 
 void init_state(state_t *state) {
-    state->ruleset = 1;
-state->rules = &rulesets[1];
+    state->ruleset = GAME_OF_LIFE;
+state->rules = &rulesets[GAME_OF_LIFE];
     state->cells = grid;
 }
 
