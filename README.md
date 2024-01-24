@@ -9,7 +9,7 @@ Implemented so far:
 ### REMINDER
 
 To add a new CA:
+- Add CA id to define.h
 - Add ruleset to simulation.c
 - Add required functions to automata.c
 - Add function prototypes to automata.h
-- Add CA id to define.h

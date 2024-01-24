@@ -16,7 +16,7 @@
 #endif // _DEBUG
 
 #define DELAY
-#define FRAME_DELAY 100
+#define FRAME_DELAY 10
 
 #ifdef DELAY
     #ifdef _WIN32
@@ -31,9 +31,10 @@
 #endif // DELAY
 
 typedef uint32_t u32;
+typedef uint8_t u8;
 
-#define GRID_WIDTH 64
-#define GRID_HEIGHT 36
+#define GRID_WIDTH 640
+#define GRID_HEIGHT 360
 // #define GRID_WIDTH 1920
 // #define GRID_HEIGHT 1080
 #define CELL_COUNT GRID_WIDTH*GRID_HEIGHT
@@ -47,18 +48,26 @@ typedef uint32_t u32;
 #define RED     0xFF0000FF
 #define YELLOW  0xFF00FFFF
 #define AZURE   0xFFFF7F0F
-
-typedef u32 position_t;
 typedef u32 cell_value_t;
-typedef u32 color_t;
+#define ALPHA_PORTION(COL) \
+    ((COL & 0xFF000000) >> 24)
+#define RED_PORTION(COL) \
+    ((COL & 0x00FF0000) >> 16)
+#define GREEN_PORTION(COL) \
+    ((COL & 0x0000FF00) >>  8)
+#define BLUE_PORTION(COL) \
+    ((COL & 0x000000FF) >>  0)
 
 typedef enum {
     GAME_OF_LIFE = 0,
     BRIANS_BRAIN,
     WIRE_WORLD,
+    BELOUSOV_ZHABATINSKY,
+    // LANGTONS_ANT,
     RULESET_COUNT
 } ruleset_name;
 
+typedef u32 color_t;
 typedef struct ruleset_t ruleset_t;
 typedef struct state_t {
     ruleset_name ruleset;
@@ -66,9 +75,9 @@ typedef struct state_t {
     cell_value_t *cells;
 } state_t;
 struct ruleset_t {
-    color_t(*get_color)(state_t *state, position_t pos);
-    cell_value_t(*get_next_value)(state_t *state, position_t pos);
-    cell_value_t(*get_random_value)(state_t *state, position_t pos, int rand_int);
+    color_t(*get_color)(state_t *state, u32 pos);
+    cell_value_t(*get_next_value)(cell_value_t *cells, u32 pos);
+    cell_value_t(*get_random_value)(int rand_int);
     color_t *palette;
     size_t palette_count;
     void (*render)(state_t *state, color_t *texture);

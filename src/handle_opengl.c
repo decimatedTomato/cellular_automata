@@ -12,7 +12,7 @@
 #include <GLFW/glfw3.h>
 
 // State
-bool fullscreen = false;
+bool fullscreen = FULL_SCREEN_MODE;
 bool just_fullscreened = false, just_loaded = false, just_paused = false, just_stepped = false, just_saved = false, just_restarted = false;
 int prev_width, prev_height, prev_x, prev_y;
 

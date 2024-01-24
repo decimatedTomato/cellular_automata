@@ -1,5 +1,6 @@
 #pragma once
 
+#define FULL_SCREEN_MODE 1
 #define MONITOR_WIDTH 1920
 #define MONITOR_HEIGHT 1080
 

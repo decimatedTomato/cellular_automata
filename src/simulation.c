@@ -5,6 +5,8 @@
 #include "handle_opengl.h"
 
 // USER DEFINITIONS
+#define CA BELOUSOV_ZHABATINSKY
+
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 #define DEFAULT_WINDOW_WIDTH SCREEN_WIDTH/3
@@ -38,8 +40,15 @@ ruleset_t rulesets[] = {
         WW_palette_count,
         render_square_grid,
     },
+    (ruleset_t) {
+        &BZ_color_palette_sample,
+        &BZ_get_next_value,
+        &BZ_get_random_value,
+        BZ_palette,
+        BZ_palette_count,
+        render_square_grid,
+    },
 };
-// assert((ARRAY_LEN(rulesets) == RULESET_COUNT));
 
 state_t state = {0};
 color_t texture[CELL_COUNT] = {0};
@@ -56,21 +65,21 @@ typedef enum DisplayMode {
 DisplayMode mode = PAUSED;
 
 void init_state(state_t *state) {
-    state->ruleset = GAME_OF_LIFE;
-state->rules = &rulesets[GAME_OF_LIFE];
+    state->ruleset = CA;
+    state->rules = &rulesets[CA];
     state->cells = grid;
 }
 
 void init_grid(state_t *state) {
     for (cell_value_t c = 0; c < CELL_COUNT; c++) {
-        state->cells[c] = state->rules->get_random_value(state, c, rand());
+        state->cells[c] = state->rules->get_random_value(rand());
     }
 }
 
 /* Update everything in simulation */
 void update(state_t *state) {
     for (size_t c = 0; c < CELL_COUNT; c++) {
-        next[c] = state->rules->get_next_value(state, c);
+        next[c] = state->rules->get_next_value(state->cells, c);
     }
     cell_value_t *tmp = next;
     next = state->cells;
@@ -108,6 +117,7 @@ void save() {
 }
 
 int main() {
+    assert((ARRAY_LEN(rulesets) == RULESET_COUNT) && "Number of rulesets does not match expectation");
     long long unsigned int t = time(NULL);
     printf("Random seed %llu\n", t);
     srand(t);
